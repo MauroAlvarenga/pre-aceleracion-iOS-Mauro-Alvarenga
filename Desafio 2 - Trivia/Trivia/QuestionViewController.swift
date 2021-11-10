@@ -11,99 +11,97 @@ class QuestionViewController: UIViewController {
 
     @IBOutlet weak var questionLabel: UILabel!
     @IBOutlet weak var nameLabel: UILabel!
+    @IBOutlet weak var scoreLabel: UILabel!
     
-    private var questions = Contenido.shared.getQuestions()
-    private var currentQuestionIndex = 0
+    private var viewModel: QuestionViewModel!
     private var username: String?
-    var categoryID: Int?
+    private var score: Int?
+    private var currentQuestion: Question?
     
-    //Agregar puntuacion, sumar 5 con cada correcta.
-    
-    private let questionsService = QuestionsService()
-    
-    
+    var categoryID = 0
+    let userDefaults = UserDefaults()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.viewModel = QuestionViewModel(service: QuestionsService())
         view.backgroundColor = UIColor(patternImage: UIImage(named: "background_1")!)
-        //setCurrentQuestion(for: currentQuestionIndex)
-        let userDefaults = UserDefaults()
-        if let usernameSet = userDefaults.string(forKey: "username") {
-            username = usernameSet
-            nameLabel.text = usernameSet + ":"
-        } else {
-            username = "Jugador:"
+        setUsername()
+        getScore()
+        getQuestion()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        getScore()
+    }
+    
+    private func getQuestion() {
+        viewModel.getQuestion(for: categoryID) { [weak self] in
+            guard let strongSelf = self else { return }
+            strongSelf.setCurrentQuestion()
         }
-        //getQuestions()
-        setRandomQuestion()
     }
 
-//    private func getQuestions() {
-//        questionsService.getQuestions() { [weak self] question in
-//            self!.questionLabel.text = question.question
-//        }
-//    }
-    
     @IBAction func yesButtonTapped(_ sender: UIButton) {
-        let result = validateCurrentQuestion(answer: true)
+        let result = validateCurrentQuestion(answer: "True")
         sendResultAlert(for: result)
     }
     
     @IBAction func noButtonTapped(_ sender: UIButton) {
-        let result = validateCurrentQuestion(answer: false)
+        let result = validateCurrentQuestion(answer: "False")
         sendResultAlert(for: result)
     }
+     
+    private func setCurrentQuestion() {
+        questionLabel.text = viewModel.getCurrentQuestion()
+    }
     
-    
-    func rightAnswerTapped() {
-        let alertSI = UIAlertController(title: "Excellent!", message: "Good Job, \(username!)! 😁", preferredStyle: .alert)
-        alertSI.addAction(UIAlertAction(title: "Thanks! 😎", style: .cancel, handler: { [self] _ in
-            NSLog("The \"correct answer\" alert occured.")
-            //updateQuestion()
-            setRandomQuestion()
+    private func validateCurrentQuestion(answer: String) -> Bool {
+        viewModel.validateCurrentQuestion(answer: answer)
+    }
+        
+    private func sendResultAlert(for result: Bool) {
+        result ? rightAnswerTapped() : wrongAnswerTapped()
+    }
+   
+    private func rightAnswerTapped() {
+        let alertYES = UIAlertController(title: "Excellent!", message: "Good Job, \(username!)! 😁", preferredStyle: .alert)
+        alertYES.addAction(UIAlertAction(title: "Thanks! 😎", style: .cancel, handler: { [self] _ in
+            increaseScore()
+            getQuestion()
         }))
-        self.present(alertSI, animated: true)
+        self.present(alertYES, animated: true)
         }
     
-    func wrongAnswerTapped() {
+    private func wrongAnswerTapped() {
         let alertNO = UIAlertController(title: "Wrong!", message: "Better luck next time, \(username!) 😔", preferredStyle: .alert)
         alertNO.addAction(UIAlertAction(title: "Ups! 😅", style: .cancel, handler: { [self] _ in
-            NSLog("The \"correct answer\" alert occured.")
-            //updateQuestion()
-            setRandomQuestion()
+            getQuestion()
         }))
         self.present(alertNO, animated: true)
     }
     
-    private func updateQuestion() {
-        currentQuestionIndex += 1
-        setCurrentQuestion(for: currentQuestionIndex)
-    }
-
-    private func setRandomQuestion() {
-        questionsService.getRandomQuestion { [weak self] receivedQuestions in
-            if receivedQuestions.count > 0 {
-                print(receivedQuestions)
-                self?.questionLabel.text = receivedQuestions[0].question
-            }
+    private func setUsername() {
+        if let usernameSet = userDefaults.string(forKey: "username") {
+            self.username = usernameSet
+            self.nameLabel.text = usernameSet + ":"
         }
     }
     
-    private func setCurrentQuestion(for index: Int) {
-        if index < questions.count {
-            questionLabel.text = questions[index].question
-        } else {
-            currentQuestionIndex = 0
-            questionLabel.text = questions[currentQuestionIndex].question
+    private func getScore() {
+        self.score = userDefaults.integer(forKey: "score")
+        setScore()
+    }
+    
+    private func setScore() {
+        if let score = self.score {
+            self.scoreLabel.text = "Score: " + String(score)
         }
     }
     
-    private func validateCurrentQuestion(answer: Bool) -> Bool {
-        questions[currentQuestionIndex].answer == answer
-    }
-    
-    private func sendResultAlert(for result: Bool) {
-        result ? rightAnswerTapped() : wrongAnswerTapped()
+    private func increaseScore() {
+        self.score! += 5
+        userDefaults.set(self.score!, forKey: "score")
+        setScore()
     }
     
 }

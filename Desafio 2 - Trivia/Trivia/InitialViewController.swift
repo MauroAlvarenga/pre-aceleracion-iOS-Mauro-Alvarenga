@@ -17,7 +17,6 @@ class InitialViewController: UIViewController, UITextFieldDelegate {
         print("ViewDidLoad invocado")
         view.backgroundColor = UIColor(patternImage: UIImage(named: "background_1")!)
         nameTextField.delegate = self
-        nameTextField.text = "Pepe"
         // It's called when the controller is created
     }
     
@@ -26,6 +25,7 @@ class InitialViewController: UIViewController, UITextFieldDelegate {
             if let username = nameTextField.text {
                 let userDefaults = UserDefaults()
                 userDefaults.set(username, forKey: "username")
+                userDefaults.set(0, forKey: "score")
             }
             presentTabBarController()
         } else if !nameTextField.hasText {
@@ -69,50 +69,25 @@ class InitialViewController: UIViewController, UITextFieldDelegate {
         self.present(tabBarController, animated: true)
     }
     
-    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        print("ViewWillAppear invocado")
         // It's called right before the view appears. It's useful to hide/show fields or any kind of operation that you wish to occur when the view appears.
         // It may be called more than once.
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        print("ViewDidAppear invocado")
         // It's called right after view appears. Used, i.e, for starting an animation.
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        print("ViewWillDisappear invocado")
         // It's called right before the view dissapears.
     }
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        print("ViewDidDisappear invocado")
         // It's called when the view has gone. 
     }
-    
-    
-    //BORRAR
-//    func presentController(_ playerName: String) {
-//        let questionVC = QuestionViewController(nibName: "QuestionViewController", bundle: nil)
-//        questionVC.modalPresentationStyle = .overFullScreen
-//        let categoriesVC = CategoriesViewController(nibName: "CategoriesViewController", bundle: nil)
-//        categoriesVC.modalPresentationStyle = .fullScreen
-//        self.present(questionVC, animated: true) //used to test single controller
-//    }
-
-//    func setNavBarAppeareance(_ navbar: UINavigationBar) {
-//        let appearance = UINavigationBarAppearance()
-//        appearance.configureWithDefaultBackground()
-//        appearance.backgroundColor = .white
-//        appearance.titleTextAttributes = [.foregroundColor: UIColor.darkText, .font: UIFont(name: "Futura", size: 28)!]
-//        navbar.standardAppearance = appearance
-//        navbar.scrollEdgeAppearance = appearance
-//        navbar.compactAppearance = appearance
-//    }
 
 }
